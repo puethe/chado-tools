@@ -174,10 +174,18 @@ def query_to_file(uri: str, query: str, params: dict, filename: str, delimiter: 
     rows = []
     if header:
         rows = [result.keys()]
-    for result_row in result.fetchall():
-        row = [value for key, value in result_row.items()]
-        rows.append(row)
-    result.close()
+    while True:
+        try:
+            result_row = result.fetchone()
+            if not result_row:
+                break
+            row = [value for key, value in result_row.items()]
+            rows.append(row)
+        except UnicodeDecodeError:
+            print("WARNING: Unable to decode row")
+            break
+    if not result.closed:
+        result.close()
     close_connection(conn)
 
     # Write table to file
